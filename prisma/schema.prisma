@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id         String   @id @default(uuid()) @db.Uuid
+  fullName   String   @map("full_name")
+  email      String
+  phone      String
+  password   String
+  profilePic String?  @map("profile_pic")
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  playlists Playlist[]
+  devices   Device[]
+
+  @@map("users")
+}
+
+model Playlist {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  name        String
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  user   User            @relation(fields: [userId], references: [id])
+  medias PlaylistMedia[]
+
+  @@map("playlists")
+}
+
+model Media {
+  id        String   @id @default(uuid()) @db.Uuid
+  path      String
+  mimeType  String   @map("mime_type")
+  size      BigInt
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  playlists PlaylistMedia[]
+
+  @@map("media")
+}
+
+model PlaylistMedia {
+  playlistId String @map("playlist_id") @db.Uuid
+  mediaId    String @map("media_id") @db.Uuid
+  position   Int
+
+  playlist Playlist @relation(fields: [playlistId], references: [id])
+  media    Media    @relation(fields: [mediaId], references: [id])
+
+  @@id([playlistId, mediaId])
+  @@map("playlist_media")
+}
+
+model Device {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  name        String
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("devices")
+}
