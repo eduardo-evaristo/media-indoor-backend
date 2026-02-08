@@ -1,4 +1,5 @@
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   ListObjectsV2Command,
   PutObjectCommand,
@@ -44,11 +45,7 @@ export default class StorageService {
 
       return fileKey;
     } catch (err: unknown) {
-      // TODO: Enchance error handling here
-      if (err instanceof Error) {
-        throw new Error(err.message);
-      }
-      throw new Error('Something went wrong');
+      throw new Error('Could not upload file', { cause: err });
     }
   }
 
@@ -61,11 +58,19 @@ export default class StorageService {
       );
       return url;
     } catch (err) {
-      // TODO: Enchance error handling here
-      if (err instanceof Error) {
-        throw new Error(err.message);
-      }
-      throw new Error('Something went wrong');
+      throw new Error('Could not sign url', { cause: err });
+    }
+  }
+
+  async delete(fileKey: string) {
+    try {
+      const command = new DeleteObjectCommand({
+        Bucket: 'test-bucket',
+        Key: fileKey,
+      });
+      return await this.s3Client.send(command);
+    } catch (err) {
+      throw new Error('Could not delete media', { cause: err });
     }
   }
 }
