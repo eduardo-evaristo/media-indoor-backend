@@ -35,6 +35,7 @@ export class PlaylistMediaService {
             path: fileKey,
             mimeType: file.mimetype,
             size: file.size,
+            userId,
           },
           transaction,
         );

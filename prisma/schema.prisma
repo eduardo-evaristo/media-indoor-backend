@@ -25,6 +25,7 @@ model User {
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
 
+  media     Media[]
   playlists Playlist[]
   devices   Device[]
 
@@ -48,6 +49,7 @@ model Playlist {
 
 model Media {
   id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
   path      String
   mimeType  String   @map("mime_type")
   size      BigInt
@@ -55,6 +57,7 @@ model Media {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
 
+  user      User            @relation(fields: [userId], references: [id])
   playlists PlaylistMedia[]
 
   @@map("media")
