@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import StorageService from 'src/storage/storage.service';
 import MediaService from 'src/media/media.service';
+import { PlaylistsService } from 'src/playlists/playlists.service';
 
 @Injectable()
 export class PlaylistMediaService {
@@ -9,12 +10,20 @@ export class PlaylistMediaService {
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
     private readonly mediaService: MediaService,
+    private readonly playlistsService: PlaylistsService,
   ) {}
 
   async createMediaAndAttachToPlaylist(
     file: Express.Multer.File,
     playlistId: string,
+    userId: string,
   ) {
+    const playlist = await this.playlistsService.getOne(playlistId, userId);
+
+    if (!playlist) {
+      throw new BadRequestException('Playlist not found');
+    }
+
     const fileKey = await this.storageService.upload(file);
 
     try {
@@ -42,8 +51,10 @@ export class PlaylistMediaService {
       // TODO: Review this
       return this.storageService.signUrl(fileKey);
     } catch (err: unknown) {
-      // TODO: Remove from bucket etc
-      throw err;
+      await this.storageService.delete(fileKey);
+      throw new Error('Something went wrong while creating media', {
+        cause: err,
+      });
     }
   }
 }
