@@ -41,7 +41,7 @@ model Playlist {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
 
-  user   User            @relation(fields: [userId], references: [id])
+  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   medias PlaylistMedia[]
 
   @@map("playlists")
@@ -57,7 +57,7 @@ model Media {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
 
-  user      User            @relation(fields: [userId], references: [id])
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   playlists PlaylistMedia[]
 
   @@map("media")
@@ -68,8 +68,8 @@ model PlaylistMedia {
   mediaId    String @map("media_id") @db.Uuid
   position   Int
 
-  playlist Playlist @relation(fields: [playlistId], references: [id])
-  media    Media    @relation(fields: [mediaId], references: [id])
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  media    Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
 
   @@id([playlistId, mediaId])
   @@map("playlist_media")
@@ -84,7 +84,7 @@ model Device {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("devices")
 }
