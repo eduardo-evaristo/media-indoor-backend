@@ -1,9 +1,11 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { PlaylistsController } from './playlists.controller';
 import { PlaylistsService } from './playlists.service';
 import { PrismaService } from '../prisma.service';
+import { PlaylistMediaModule } from 'src/playlist-media/playlist-media.module';
 
 @Module({
+  imports: [forwardRef(() => PlaylistMediaModule)],
   controllers: [PlaylistsController],
   providers: [PlaylistsService, PrismaService],
   exports: [PlaylistsService],

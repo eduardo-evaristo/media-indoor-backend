@@ -7,7 +7,11 @@ import { PlaylistsModule } from 'src/playlists/playlists.module';
 
 @Module({
   // This or have the method be inside playlistsController
-  imports: [forwardRef(() => MediaModule), StorageModule, PlaylistsModule],
+  imports: [
+    forwardRef(() => MediaModule),
+    StorageModule,
+    forwardRef(() => PlaylistsModule),
+  ],
   providers: [PlaylistMediaService, PrismaService],
   exports: [PlaylistMediaService],
 })

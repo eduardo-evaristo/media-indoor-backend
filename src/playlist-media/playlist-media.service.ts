@@ -40,10 +40,25 @@ export class PlaylistMediaService {
           transaction,
         );
 
-        // Attach it to a playlist
         // TODO: Maybe transform this into its own method
+        // Attach it to a playlist
+
+        // Get what position ot should take
+        // I believe this is faster than a count, I'm getting ONE value only for this one
+        const lastItem = await transaction.playlistMedia.findFirst({
+          where: { playlistId },
+          orderBy: { position: 'desc' },
+        });
+
+        // Using a 1-index here, no particular reason not to use 0 tho
+        const position = lastItem ? lastItem.position + 1 : 1;
+
         const mediaToPlaylist = await transaction.playlistMedia.create({
-          data: { mediaId: createdMedia.id, playlistId, position: 1 },
+          data: {
+            mediaId: createdMedia.id,
+            playlistId,
+            position,
+          },
         });
 
         return mediaToPlaylist;
@@ -57,5 +72,19 @@ export class PlaylistMediaService {
         cause: err,
       });
     }
+  }
+
+  async getPlaylistMedia(playlistId: string) {
+    const mediaResult = await this.prisma.playlistMedia.findMany({
+      where: { playlistId },
+      omit: { playlistId: true, mediaId: true },
+      include: { media: { select: { path: true } } },
+      orderBy: { position: 'asc' },
+    });
+    // Maybe use an interceptor for this
+    for (const media of mediaResult) {
+      media.media.path = await this.storageService.signUrl(media.media.path);
+    }
+    return mediaResult;
   }
 }
