@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma.service';
 import StorageService from 'src/storage/storage.service';
 import MediaService from 'src/media/media.service';
 import { PlaylistsService } from 'src/playlists/playlists.service';
+import { ReorderMediaDTO } from 'src/playlists/dto/reorder-media.dto';
 
 @Injectable()
 export class PlaylistMediaService {
@@ -78,7 +79,7 @@ export class PlaylistMediaService {
     const mediaResult = await this.prisma.playlistMedia.findMany({
       where: { playlistId },
       omit: { playlistId: true, mediaId: true },
-      include: { media: { select: { path: true } } },
+      include: { media: { select: { path: true, id: true } } },
       orderBy: { position: 'asc' },
     });
     // Maybe use an interceptor for this
@@ -86,5 +87,46 @@ export class PlaylistMediaService {
       media.media.path = await this.storageService.signUrl(media.media.path);
     }
     return mediaResult;
+  }
+
+  // This reorder is SHIFT BASED. not swapping
+  async reorderMedia(playlistId: string, reorderMediaDto: ReorderMediaDTO) {
+    const { mediaId, oldPosition, newPosition } = reorderMediaDto;
+
+    if (oldPosition === newPosition)
+      throw new BadRequestException('Positions are the same');
+
+    // Transaction cuz two updates are needed
+    return this.prisma.$transaction(async (transaction) => {
+      if (oldPosition > newPosition) {
+        //MOVING UP POSITIONS
+        // All item's positions >= newPos < oldPos add one (+1 to their position)
+        await transaction.playlistMedia.updateMany({
+          where: {
+            playlistId,
+            position: { gte: newPosition },
+            AND: { position: { lt: oldPosition } },
+          },
+          data: { position: { increment: 1 } },
+        });
+        // Should this be an else if or an else, I need another guardrail to make sure cancelled events never reach this or dont go any further
+      } else {
+        //MOVING DOWN POSITIONS
+        await transaction.playlistMedia.updateMany({
+          where: {
+            playlistId,
+            position: { lte: newPosition },
+            AND: { position: { gt: oldPosition } },
+          },
+          data: { position: { decrement: 1 } },
+        });
+      }
+
+      // ITEM moved become newPos
+      await transaction.playlistMedia.update({
+        where: { playlistId_mediaId: { mediaId, playlistId } },
+        data: { position: newPosition },
+      });
+    });
   }
 }

@@ -66,6 +66,13 @@ export class PlaylistsController {
     return this.playlistMediaService.getPlaylistMedia(playlistId);
   }
 
+  @Patch(':id/media/reorder')
+  async reorderMedia(
+    @Param('id', ParseUUIDPipe) playlistId: string,
+    @Body() reorderMediaDto: ReorderMediaDTO,
+  ) {
+    return this.playlistMediaService.reorderMedia(playlistId, reorderMediaDto);
+  }
   // @Post(':id/media')
   // @UseInterceptors(FileInterceptor('file'))
   // async createMedia(
