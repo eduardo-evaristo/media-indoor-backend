@@ -17,6 +17,7 @@ export class PlaylistMediaService {
   async createMediaAndAttachToPlaylist(
     file: Express.Multer.File,
     playlistId: string,
+    duration: number,
     userId: string,
   ) {
     const playlist = await this.playlistsService.getOne(playlistId, userId);
@@ -59,6 +60,7 @@ export class PlaylistMediaService {
             mediaId: createdMedia.id,
             playlistId,
             position,
+            duration,
           },
         });
 

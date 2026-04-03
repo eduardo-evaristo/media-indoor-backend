@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  ParseIntPipe,
   ParseUUIDPipe,
   Post,
   Req,
@@ -29,11 +30,13 @@ export class MediaController {
     @UploadedFile(FileSizePipe) file: Express.Multer.File,
     @Req() request: Request,
     @Body('playlistId', ParseUUIDPipe) playlistId: string,
+    @Body('duration', ParseIntPipe) duration: number,
   ) {
     const user = request.user as { userId: string; email: string };
     return this.playlistMediaService.createMediaAndAttachToPlaylist(
       file,
       playlistId,
+      duration,
       user.userId,
     );
   }
