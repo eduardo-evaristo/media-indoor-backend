@@ -1,7 +1,5 @@
 import crypto from 'node:crypto';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { CreateDeviceDto } from './dto/create-device.dto';
-import { UpdateDeviceDto } from './dto/update-device.dto';
 import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
