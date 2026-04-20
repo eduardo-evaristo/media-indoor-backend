@@ -7,6 +7,7 @@ import { MediaModule } from './media/media.module';
 import StorageModule from './storage/storage.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { PlaylistMediaModule } from './playlist-media/playlist-media.module';
+import { DevicesModule } from './devices/devices.module';
 import multer from 'multer';
 
 @Module({
@@ -22,6 +23,7 @@ import multer from 'multer';
     StorageModule,
     MediaModule,
     PlaylistMediaModule,
+    DevicesModule,
   ],
   controllers: [],
 })

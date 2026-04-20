@@ -41,8 +41,9 @@ model Playlist {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
 
-  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  medias PlaylistMedia[]
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  medias  PlaylistMedia[]
+  devices Device[]
 
   @@map("playlists")
 }
@@ -67,6 +68,8 @@ model PlaylistMedia {
   playlistId String @map("playlist_id") @db.Uuid
   mediaId    String @map("media_id") @db.Uuid
   position   Int
+  // default just cuz i already got records
+  duration   Int    @default(15)
 
   playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
   media    Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
@@ -76,15 +79,20 @@ model PlaylistMedia {
 }
 
 model Device {
-  id          String   @id @default(uuid()) @db.Uuid
-  userId      String   @map("user_id") @db.Uuid
-  name        String
-  description String?
-  isActive    Boolean  @default(true) @map("is_active")
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String?   @map("user_id") @db.Uuid
+  name            String
+  description     String?
+  playlistId      String?   @map("playlist_id") @db.Uuid
+  isActive        Boolean   @default(true) @map("is_active")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+  activationToken String?   @map("activation_token")
+  tokenExpiresAt  DateTime? @map("token_expires_at") @db.Timestamp(6)
+  deviceToken     String?   @map("device_token")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playlist Playlist? @relation(fields: [playlistId], references: [id], onDelete: SetNull)
 
   @@map("devices")
 }
