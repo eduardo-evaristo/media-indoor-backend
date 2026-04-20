@@ -43,6 +43,7 @@ model Playlist {
 
   user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   medias PlaylistMedia[]
+  devices Device[]
 
   @@map("playlists")
 }
@@ -82,13 +83,15 @@ model Device {
   userId          String?   @map("user_id") @db.Uuid
   name            String
   description     String?
+  playlistId      String?   @map("playlist_id") @db.Uuid
   isActive        Boolean   @default(true) @map("is_active")
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
   activationToken String?   @map("activation_token")
   tokenExpiresAt  DateTime? @map("token_expires_at") @db.Timestamp(6)
 
-  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playlist  Playlist?  @relation(fields: [playlistId], references: [id], onDelete: SetNull)
 
   @@map("devices")
 }

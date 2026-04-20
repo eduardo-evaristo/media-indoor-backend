@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
+import { UpdateDeviceDto } from './dto/update-device.dto';
 
 @Injectable()
 export class DevicesService {
@@ -56,6 +57,56 @@ export class DevicesService {
         userId: userId,
         activationToken: null,
         tokenExpiresAt: null,
+      },
+    });
+  }
+
+  async findAll(userId: string) {
+    return this.prisma.device.findMany({
+      where: { userId },
+      omit: {
+        activationToken: true,
+        tokenExpiresAt: true,
+      },
+    });
+  }
+
+  async findAllWithPlaylist(userId: string) {
+    return this.prisma.device.findMany({
+      where: { userId },
+      include: { playlist: true },
+      omit: {
+        activationToken: true,
+        tokenExpiresAt: true,
+      },
+    });
+  }
+
+  async update(deviceId: string, userId: string, updateData: UpdateDeviceDto) {
+    const device = await this.prisma.device.findUnique({
+      where: { id: deviceId },
+    });
+
+    if (!device || device.userId !== userId) {
+      throw new HttpException('Device not found', HttpStatus.NOT_FOUND);
+    }
+
+    if (updateData.playlistId) {
+      const playlist = await this.prisma.playlist.findUnique({
+        where: { id: updateData.playlistId },
+      });
+
+      if (!playlist || playlist.userId !== userId) {
+        throw new HttpException('Playlist not found', HttpStatus.NOT_FOUND);
+      }
+    }
+
+    return this.prisma.device.update({
+      where: { id: deviceId },
+      data: updateData,
+      omit: {
+        activationToken: true,
+        tokenExpiresAt: true,
       },
     });
   }

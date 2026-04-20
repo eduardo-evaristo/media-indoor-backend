@@ -9,13 +9,29 @@ import {
   UseGuards,
   Request,
   ParseUUIDPipe,
+  Query,
+  ParseBoolPipe,
 } from '@nestjs/common';
 import { DevicesService } from './devices.service';
 import { AuthGuard } from '@nestjs/passport';
+import { UpdateDeviceDto } from './dto/update-device.dto';
 
 @Controller('devices')
 export class DevicesController {
   constructor(private readonly devicesService: DevicesService) {}
+
+  @Get()
+  @UseGuards(AuthGuard('jwt'))
+  findAll(
+    @Request() request,
+    @Query('playlist', ParseBoolPipe) playlist: boolean,
+  ) {
+    const userId = request.user.userId;
+    if (playlist === true)
+      return this.devicesService.findAllWithPlaylist(userId);
+
+    return this.devicesService.findAll(userId);
+  }
 
   @Post()
   create() {
@@ -30,6 +46,17 @@ export class DevicesController {
   ) {
     const userId = request.user.userId;
     return this.devicesService.activate(activationToken, userId);
+  }
+
+  @Patch(':id')
+  @UseGuards(AuthGuard('jwt'))
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateDeviceDto: UpdateDeviceDto,
+    @Request() request,
+  ) {
+    const userId = request.user.userId;
+    return this.devicesService.update(id, userId, updateDeviceDto);
   }
 
   // Add security to this
