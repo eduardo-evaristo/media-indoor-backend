@@ -65,6 +65,11 @@ export class DevicesController {
     return this.devicesService.findOne(id);
   }
 
+  @Get('activation/:token/status')
+  pollDeviceStatus(@Param('token') activationToken: string) {
+    return this.devicesService.pollDevice(activationToken);
+  }
+
   @Post(':id/regenerate-token')
   regenerateActivationToken(@Param('id', ParseUUIDPipe) deviceId: string) {
     return this.devicesService.regenerateActivationToken(deviceId);

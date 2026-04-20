@@ -29,7 +29,7 @@ export class DevicesService {
   }
 
   async activate(activationToken: string, userId: string) {
-    // Try and find a playlist with given token
+    // Try and find a playlist with given token that's unactivated (no user)
     const hashedActivationToken = this.hashToken(activationToken);
     const device = await this.prisma.device.findFirst({
       where: { activationToken: hashedActivationToken, AND: { userId: null } },
@@ -55,8 +55,6 @@ export class DevicesService {
       },
       data: {
         userId: userId,
-        activationToken: null,
-        tokenExpiresAt: null,
       },
     });
   }
@@ -164,6 +162,38 @@ export class DevicesService {
       deviceId: updatedDevice.id,
       tokenExpiresAt: updatedDevice.tokenExpiresAt,
     };
+  }
+
+  async pollDevice(activationToken: string) {
+    // Find device with NO unique secret token with said activation token
+    const hashedActivationToken = this.hashToken(activationToken);
+    const device = await this.prisma.device.findFirst({
+      where: {
+        activationToken: hashedActivationToken,
+        deviceToken: null,
+      },
+    });
+
+    if (!device)
+      throw new HttpException('Device not found', HttpStatus.NOT_FOUND);
+
+    // If status pending (userId === null), let user know
+    if (device.userId === null) return { status: 'pending' };
+
+    // If status activated, create unique secret token (what a name) and assign it to the record in the DB
+    const deviceToken = crypto.randomBytes(32).toString('base64url');
+    const hashedDeviceToken = this.hashToken(deviceToken);
+
+    await this.prisma.device.update({
+      where: { id: device.id },
+      data: {
+        deviceToken: hashedDeviceToken,
+        activationToken: null,
+        tokenExpiresAt: null,
+      },
+    });
+
+    return { status: 'activated', deviceId: device.id, deviceToken };
   }
 
   // TODO: Make this more robust
