@@ -23,7 +23,6 @@ export class DevicesService {
 
     return {
       activationToken,
-      deviceId: device.id,
       tokenExpiresAt: device.tokenExpiresAt,
     };
   }
