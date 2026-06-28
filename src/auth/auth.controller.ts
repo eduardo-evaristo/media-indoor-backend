@@ -28,8 +28,8 @@ export class AuthController {
     res.cookie('access_token', access_token, {
       httpOnly: true,
       path: '/',
-      secure:
-        this.configService.getOrThrow<string>('NODE_ENV') === 'production',
+      secure: false,
+      sameSite: 'lax',
     });
     return { access_token };
   }
@@ -43,8 +43,8 @@ export class AuthController {
     res.cookie('access_token', access_token, {
       httpOnly: true,
       path: '/',
-      secure:
-        this.configService.getOrThrow<string>('NODE_ENV') === 'production',
+      secure: false,
+      sameSite: 'lax',
     });
     return { access_token };
   }
