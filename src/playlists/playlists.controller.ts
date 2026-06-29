@@ -25,6 +25,7 @@ import StorageService from 'src/storage/storage.service';
 import MediaService from 'src/media/media.service';
 import { PlaylistMediaService } from 'src/playlist-media/playlist-media.service';
 import { ReorderMediaDTO } from './dto/reorder-media.dto';
+import ObjectSignerInterceptor from 'src/common/interceptors/ObjectSignerInterceptor.interceptor';
 
 @Controller('playlists')
 @UseGuards(AuthGuard('jwt'))
@@ -62,6 +63,7 @@ export class PlaylistsController {
   }
 
   @Get(':id/media')
+  @UseInterceptors(ObjectSignerInterceptor)
   async getMedia(@Param('id', ParseUUIDPipe) playlistId: string) {
     return this.playlistMediaService.getPlaylistMedia(playlistId);
   }

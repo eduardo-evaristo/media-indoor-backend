@@ -85,9 +85,9 @@ export class PlaylistMediaService {
       orderBy: { position: 'asc' },
     });
     // Maybe use an interceptor for this
-    for (const media of mediaResult) {
-      media.media.path = await this.storageService.signUrl(media.media.path);
-    }
+    // for (const media of mediaResult) {
+    //   media.media.path = await this.storageService.signUrl(media.media.path);
+    // }
     return mediaResult;
   }
 

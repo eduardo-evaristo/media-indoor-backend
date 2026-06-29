@@ -108,9 +108,23 @@ export class DevicesService {
     });
   }
 
-  async findOne(deviceId: string) {
+  async findOne(deviceId: string, deviceToken: string) {
+    const hashedDeviceToken = this.hashToken(deviceToken);
     const device = await this.prisma.device.findUnique({
-      where: { id: deviceId, AND: { NOT: { userId: null } } },
+      where: {
+        id: deviceId,
+        deviceToken: hashedDeviceToken,
+        AND: { NOT: { userId: null } },
+      },
+      include: {
+        playlist: {
+          include: {
+            medias: {
+              include: { media: { select: { path: true, id: true } } },
+            },
+          },
+        },
+      },
       omit: {
         activationToken: true,
         tokenExpiresAt: true,
@@ -125,6 +139,7 @@ export class DevicesService {
         HttpStatus.NOT_FOUND,
       );
 
+    console.log('Tis the device', device);
     return device;
   }
 

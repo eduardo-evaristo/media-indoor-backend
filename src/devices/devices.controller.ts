@@ -11,10 +11,12 @@ import {
   ParseUUIDPipe,
   Query,
   ParseBoolPipe,
+  UseInterceptors,
 } from '@nestjs/common';
 import { DevicesService } from './devices.service';
 import { AuthGuard } from '@nestjs/passport';
 import { UpdateDeviceDto } from './dto/update-device.dto';
+import ObjectSignerInterceptor from 'src/common/interceptors/ObjectSignerInterceptor.interceptor';
 
 @Controller('devices')
 export class DevicesController {
@@ -61,8 +63,12 @@ export class DevicesController {
 
   // Add security to this
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.devicesService.findOne(id);
+  @UseInterceptors(ObjectSignerInterceptor)
+  findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('deviceToken') deviceToken: string,
+  ) {
+    return this.devicesService.findOne(id, deviceToken);
   }
 
   @Get('activation/:token/status')
