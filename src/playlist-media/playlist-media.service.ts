@@ -81,7 +81,7 @@ export class PlaylistMediaService {
     const mediaResult = await this.prisma.playlistMedia.findMany({
       where: { playlistId },
       omit: { playlistId: true, mediaId: true },
-      include: { media: { select: { path: true, id: true } } },
+      include: { media: { select: { path: true, id: true, size: true, mimeType: true } } },
       orderBy: { position: 'asc' },
     });
     // Maybe use an interceptor for this
