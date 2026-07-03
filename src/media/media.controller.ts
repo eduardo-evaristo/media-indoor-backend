@@ -29,11 +29,13 @@ export class MediaController {
   async create(
     @UploadedFile(FileSizePipe) file: Express.Multer.File,
     @Req() request: Request,
+    @Body('name') name: string,
     @Body('playlistId', ParseUUIDPipe) playlistId: string,
     @Body('duration', ParseIntPipe) duration: number,
   ) {
     const user = request.user as { userId: string; email: string };
     return this.playlistMediaService.createMediaAndAttachToPlaylist(
+      name,
       file,
       playlistId,
       duration,

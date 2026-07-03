@@ -15,6 +15,7 @@ export class PlaylistMediaService {
   ) {}
 
   async createMediaAndAttachToPlaylist(
+    name: string,
     file: Express.Multer.File,
     playlistId: string,
     duration: number,
@@ -34,6 +35,7 @@ export class PlaylistMediaService {
         // Create media
         const createdMedia = await this.mediaService.create(
           {
+            name,
             path: fileKey,
             mimeType: file.mimetype,
             size: file.size,
@@ -81,7 +83,7 @@ export class PlaylistMediaService {
     const mediaResult = await this.prisma.playlistMedia.findMany({
       where: { playlistId },
       omit: { playlistId: true, mediaId: true },
-      include: { media: { select: { path: true, id: true, size: true, mimeType: true } } },
+      include: { media: { select: { path: true, id: true, size: true, mimeType: true, name: true, description: true  } } },
       orderBy: { position: 'asc' },
     });
     // Maybe use an interceptor for this
