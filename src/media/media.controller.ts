@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   ParseIntPipe,
   ParseUUIDPipe,
   Post,
@@ -15,6 +16,7 @@ import { FileSizePipe } from 'src/common/pipes/FileSizePipe.pipe';
 import { PlaylistMediaService } from 'src/playlist-media/playlist-media.service';
 import { AuthGuard } from '@nestjs/passport';
 import type { Request } from 'express';
+import ObjectSignerInterceptor from 'src/common/interceptors/ObjectSignerInterceptor.interceptor';
 
 @Controller('media')
 @UseGuards(AuthGuard('jwt'))
@@ -41,5 +43,14 @@ export class MediaController {
       duration,
       user.userId,
     );
+  }
+
+  @Get()
+  @UseInterceptors(ObjectSignerInterceptor)
+  async getAll(@Req() request: Request) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const userId = request?.user.userId;
+    return this.mediaService.getAll(userId)
   }
 }
