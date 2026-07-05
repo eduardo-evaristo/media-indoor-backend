@@ -33,6 +33,10 @@ export default class ObjectSignerInterceptor implements NestInterceptor {
           return from(this.signAll(data, true));
         }
 
+        if (handleName === 'getAvailablePlaylistMedia') {
+          return from(this.signAll(data, true))
+        }
+
         return from(this.signAll(data));
       }),
     );

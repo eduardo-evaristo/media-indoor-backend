@@ -149,7 +149,7 @@ export class PlaylistMediaService {
 
       // I insert the media and update the position accordingly for each
       let position = lastItem ? lastItem.position + 1 : 1
-      
+
       // Duration will likely be the playlist's default or app's default
       const mediaToInsert = mediaIds.map((mediaId) => {
         const mediaObject = { mediaId, duration: 15, position, playlistId };
@@ -159,5 +159,9 @@ export class PlaylistMediaService {
 
       return transaction.playlistMedia.createMany({ data: mediaToInsert })
     })
+  }
+
+  async getAvailablePlaylistMedia(playlistId: string, userId: string) {
+    return this.prisma.media.findMany({ where: { userId, isActive: true, playlists: { none: { playlistId } } }, omit: { description: true, updatedAt: true, userId: true, isActive: true } });
   }
 }

@@ -89,4 +89,12 @@ export class PlaylistsController {
       playlistId
     );
   }
+
+  @Get(":id/available-media")
+  @UseInterceptors(ObjectSignerInterceptor)
+  async getAvailablePlaylistMedia(@Param('id', ParseUUIDPipe) playlistId: string, @Req() request: Request) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    return this.playlistMediaService.getAvailablePlaylistMedia(playlistId, request.user.userId);
+  }
 }
