@@ -26,6 +26,7 @@ import MediaService from 'src/media/media.service';
 import { PlaylistMediaService } from 'src/playlist-media/playlist-media.service';
 import { ReorderMediaDTO } from './dto/reorder-media.dto';
 import ObjectSignerInterceptor from 'src/common/interceptors/ObjectSignerInterceptor.interceptor';
+import { AttachMediaDto } from './dto/attach-media.dto';
 
 @Controller('playlists')
 @UseGuards(AuthGuard('jwt'))
@@ -75,15 +76,17 @@ export class PlaylistsController {
   ) {
     return this.playlistMediaService.reorderMedia(playlistId, reorderMediaDto);
   }
-  // @Post(':id/media')
-  // @UseInterceptors(FileInterceptor('file'))
-  // async createMedia(
-  //   @UploadedFile(FileSizePipe) file: Express.Multer.File,
-  //   @Param('id', ParseUUIDPipe) playlistId: string,
-  // ) {
-  //   return this.playlistMediaService.createMediaAndAttachToPlaylist(
-  //     file,
-  //     playlistId,
-  //   );
-  // }
+
+  @Post(':id/media')
+  async attachMedia(
+    @Param('id', ParseUUIDPipe) playlistId: string,
+    @Body() attachMediaDto: AttachMediaDto
+  ) {
+    const mediaIds = attachMediaDto.mediaIds;
+
+    return this.playlistMediaService.attachMediaToPlaylist(
+      mediaIds,
+      playlistId
+    );
+  }
 }

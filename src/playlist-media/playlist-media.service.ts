@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import StorageService from 'src/storage/storage.service';
 import MediaService from 'src/media/media.service';
@@ -12,7 +12,7 @@ export class PlaylistMediaService {
     private readonly storageService: StorageService,
     private readonly mediaService: MediaService,
     private readonly playlistsService: PlaylistsService,
-  ) {}
+  ) { }
 
   async createMediaAndAttachToPlaylist(
     name: string,
@@ -83,7 +83,7 @@ export class PlaylistMediaService {
     const mediaResult = await this.prisma.playlistMedia.findMany({
       where: { playlistId },
       omit: { playlistId: true, mediaId: true },
-      include: { media: { select: { path: true, id: true, size: true, mimeType: true, name: true, description: true  } } },
+      include: { media: { select: { path: true, id: true, size: true, mimeType: true, name: true, description: true } } },
       orderBy: { position: 'asc' },
     });
     // Maybe use an interceptor for this
@@ -132,5 +132,32 @@ export class PlaylistMediaService {
         data: { position: newPosition },
       });
     });
+  }
+
+  async attachMediaToPlaylist(mediaIds: string[], playlistId: string) {
+    // This should be a transaction because I need to ensure all of the media will be added
+
+    // I need to check if the media exist
+    this.prisma.$transaction(async (transaction) => {
+      const foundMedia = await transaction.media.findMany({ where: { id: { in: mediaIds } } })
+
+      // Enhance this
+      if (foundMedia.length !== mediaIds.length) throw new NotFoundException("Some media are missing")
+
+      // Find last position to start inserting the media
+      const lastItem = await transaction.playlistMedia.findFirst({ select: { position: true }, where: { playlistId }, orderBy: { position: "desc" } })
+
+      // I insert the media and update the position accordingly for each
+      let position = lastItem ? lastItem.position + 1 : 1
+      
+      // Duration will likely be the playlist's default or app's default
+      const mediaToInsert = mediaIds.map((mediaId) => {
+        const mediaObject = { mediaId, duration: 15, position, playlistId };
+        position++;
+        return mediaObject
+      })
+
+      return transaction.playlistMedia.createMany({ data: mediaToInsert })
+    })
   }
 }
