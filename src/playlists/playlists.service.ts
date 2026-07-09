@@ -3,10 +3,11 @@ import { PrismaService } from '../prisma.service';
 import { CreatePlaylistDto } from './dto/create-playlist.dto';
 import multer from 'multer';
 import { TransactionClient } from 'src/generated/prisma/internal/prismaNamespace';
+import { EditPlaylistDto } from './dto/edit-playlist.dto';
 
 @Injectable()
 export class PlaylistsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(userId: string, createPlaylistDto: CreatePlaylistDto) {
     return await this.prisma.playlist.create({
@@ -26,6 +27,7 @@ export class PlaylistsService {
         this.prisma.playlist.findMany({
           omit: { isActive: true },
           where: { userId, isActive: true },
+          include: { _count: { select: { medias: true } }, medias: { select: { duration: true } }, devices: { select: { name: true }, where: { isActive: true } } },
           skip: offset,
           take: limit,
         }),
@@ -56,14 +58,6 @@ export class PlaylistsService {
         isActive: true,
       },
       where: { id, userId }, // Ensure user owns the playlist
-      include: {
-        medias: {
-          omit: { playlistId: true },
-          include: {
-            media: { select: { path: true } },
-          },
-        },
-      },
     });
   }
 
@@ -83,5 +77,13 @@ export class PlaylistsService {
       data: { mediaId, playlistId, position: 2 },
     });
     return coolName;
+  }
+
+  async edit(userId: string, id: string, editPlaylistDto: EditPlaylistDto) {
+    return this.prisma.playlist.update({
+      where: { id, userId }, data: editPlaylistDto, omit: {
+        isActive: true,
+      },
+    });
   }
 }

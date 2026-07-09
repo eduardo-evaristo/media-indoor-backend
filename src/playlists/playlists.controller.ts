@@ -14,6 +14,7 @@ import {
   Inject,
   forwardRef,
   Patch,
+  BadRequestException,
 } from '@nestjs/common';
 import { PlaylistsService } from './playlists.service';
 import { CreatePlaylistDto } from './dto/create-playlist.dto';
@@ -27,6 +28,7 @@ import { PlaylistMediaService } from 'src/playlist-media/playlist-media.service'
 import { ReorderMediaDTO } from './dto/reorder-media.dto';
 import ObjectSignerInterceptor from 'src/common/interceptors/ObjectSignerInterceptor.interceptor';
 import { AttachMediaDto } from './dto/attach-media.dto';
+import { EditPlaylistDto } from './dto/edit-playlist.dto';
 
 @Controller('playlists')
 @UseGuards(AuthGuard('jwt'))
@@ -59,7 +61,17 @@ export class PlaylistsController {
     // @ts-ignore
     const userId = req.user.userId;
     const playlist = await this.playlistsService.getOne(id, userId);
-    console.log(playlist);
+    return playlist;
+  }
+
+  @Patch(':id')
+  async edit(@Req() req: Request, @Param('id', ParseUUIDPipe) id: string, @Body() editPlaylistDto: EditPlaylistDto) {
+    if (Object.keys(editPlaylistDto).length === 0) throw new BadRequestException("At least one field must have been edited");
+    
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const userId = req.user.userId;
+    const playlist = await this.playlistsService.edit(userId, id, editPlaylistDto)
     return playlist;
   }
 
