@@ -58,6 +58,7 @@ export class PlaylistsService {
         isActive: true,
       },
       where: { id, userId }, // Ensure user owns the playlist
+      include: {devices: true}
     });
   }
 

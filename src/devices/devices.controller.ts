@@ -10,13 +10,13 @@ import {
   Request,
   ParseUUIDPipe,
   Query,
-  ParseBoolPipe,
   UseInterceptors,
 } from '@nestjs/common';
 import { DevicesService } from './devices.service';
 import { AuthGuard } from '@nestjs/passport';
 import { UpdateDeviceDto } from './dto/update-device.dto';
 import ObjectSignerInterceptor from 'src/common/interceptors/ObjectSignerInterceptor.interceptor';
+import { FindAllDevicesQueryDto } from './dto/FindAllDevicesQuery.dto';
 
 @Controller('devices')
 export class DevicesController {
@@ -26,13 +26,12 @@ export class DevicesController {
   @UseGuards(AuthGuard('jwt'))
   findAll(
     @Request() request,
-    @Query('playlist', ParseBoolPipe) playlist: boolean,
+    @Query() query: FindAllDevicesQueryDto
   ) {
+    console.log(query)
     const userId = request.user.userId;
-    if (playlist === true)
-      return this.devicesService.findAllWithPlaylist(userId);
 
-    return this.devicesService.findAll(userId);
+    return this.devicesService.findAll(userId, query);
   }
 
   @Post()

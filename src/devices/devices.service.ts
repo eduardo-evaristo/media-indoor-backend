@@ -2,10 +2,11 @@ import crypto from 'node:crypto';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { UpdateDeviceDto } from './dto/update-device.dto';
+import { FindAllDevicesQueryDto } from './dto/FindAllDevicesQuery.dto';
 
 @Injectable()
 export class DevicesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
   async create() {
     const activationToken = this.generateActivationCode();
     const tokenExpiresAt = new Date(new Date().getTime() + 10 * 60 * 1000);
@@ -58,13 +59,14 @@ export class DevicesService {
     });
   }
 
-  async findAll(userId: string) {
+  async findAll(userId: string, { unassigned, includePlaylist, playlistId }: FindAllDevicesQueryDto = {}) {
     return this.prisma.device.findMany({
-      where: { userId },
+      where: { userId, isActive: true, ...(unassigned && { playlistId: null }), ...(playlistId && { playlistId }) },
       omit: {
         activationToken: true,
         tokenExpiresAt: true,
       },
+      ...(includePlaylist && { include: { playlist: true } })
     });
   }
 
