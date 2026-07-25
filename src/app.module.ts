@@ -9,6 +9,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { PlaylistMediaModule } from './playlist-media/playlist-media.module';
 import { DevicesModule } from './devices/devices.module';
 import multer from 'multer';
+import VisualizerModule from './visualizer/visualizer.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import multer from 'multer';
     MediaModule,
     PlaylistMediaModule,
     DevicesModule,
+    VisualizerModule,
   ],
   controllers: [],
 })

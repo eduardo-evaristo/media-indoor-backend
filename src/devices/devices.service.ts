@@ -6,7 +6,7 @@ import { FindAllDevicesQueryDto } from './dto/FindAllDevicesQuery.dto';
 
 @Injectable()
 export class DevicesService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
   async create() {
     const activationToken = this.generateActivationCode();
     const tokenExpiresAt = new Date(new Date().getTime() + 10 * 60 * 1000);
@@ -59,14 +59,22 @@ export class DevicesService {
     });
   }
 
-  async findAll(userId: string, { unassigned, includePlaylist, playlistId }: FindAllDevicesQueryDto = {}) {
+  async findAll(
+    userId: string,
+    { unassigned, includePlaylist, playlistId }: FindAllDevicesQueryDto = {},
+  ) {
     return this.prisma.device.findMany({
-      where: { userId, isActive: true, ...(unassigned && { playlistId: null }), ...(playlistId && { playlistId }) },
+      where: {
+        userId,
+        isActive: true,
+        ...(unassigned && { playlistId: null }),
+        ...(playlistId && { playlistId }),
+      },
       omit: {
         activationToken: true,
         tokenExpiresAt: true,
       },
-      ...(includePlaylist && { include: { playlist: true } })
+      ...(includePlaylist && { include: { playlist: true } }),
     });
   }
 
@@ -210,6 +218,30 @@ export class DevicesService {
     });
 
     return { status: 'activated', deviceId: device.id, deviceToken };
+  }
+
+  async validateAndGet(deviceId: string, deviceToken: string) {
+    const hashedDeviceToken = this.hashToken(deviceToken);
+
+    const device = await this.prisma.device.findUnique({
+      where: {
+        id: deviceId,
+        deviceToken: hashedDeviceToken,
+        AND: { NOT: { userId: null }, isActive: true },
+      },
+      select: {
+        id: true,
+        userId: true,
+      },
+    });
+
+    if (!device)
+      throw new HttpException(
+        'No device found or not activated yet',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return device;
   }
 
   // TODO: Make this more robust
