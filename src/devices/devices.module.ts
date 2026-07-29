@@ -7,5 +7,6 @@ import StorageService from 'src/storage/storage.service';
 @Module({
   controllers: [DevicesController],
   providers: [DevicesService, PrismaService, StorageService],
+  exports: [DevicesService],
 })
 export class DevicesModule {}

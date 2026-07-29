@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 import VisualizerGateway from './visualizer.gateway';
-import { DevicesService } from 'src/devices/devices.service';
-import { PrismaService } from 'src/prisma.service';
+import { AuthModule } from 'src/auth/auth.module';
+import { DevicesModule } from 'src/devices/devices.module';
 
-@Module({ providers: [VisualizerGateway, DevicesService, PrismaService] })
+@Module({
+  imports: [AuthModule, DevicesModule],
+  providers: [VisualizerGateway],
+})
 export default class VisualizerModule {}

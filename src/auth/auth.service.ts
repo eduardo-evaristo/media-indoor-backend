@@ -54,4 +54,8 @@ export class AuthService {
     } = user;
     return result;
   }
+
+  verifyToken(token: string): { sub: string; email: string } {
+    return this.jwtService.verify(token);
+  }
 }
