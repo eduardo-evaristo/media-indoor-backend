@@ -244,6 +244,14 @@ export class DevicesService {
     return device;
   }
 
+  async isOwnedBy(deviceId: string, userId: string) {
+    const device = await this.prisma.device.findUnique({
+      where: { id: deviceId, userId },
+    });
+
+    return !!device;
+  }
+
   // TODO: Make this more robust
   private generateActivationCode(length = 6) {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no confusing chars (O, 0, I, 1)

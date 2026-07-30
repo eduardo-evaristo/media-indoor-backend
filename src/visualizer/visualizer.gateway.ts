@@ -1,4 +1,4 @@
-import { JwtService } from '@nestjs/jwt';
+import { ParseUUIDPipe } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -89,6 +89,44 @@ export default class VisualizerGateway implements OnGatewayConnection {
       default:
         client.disconnect();
         return;
+    }
+  }
+
+  @SubscribeMessage('joinDevice')
+  async joinDevice(
+    @MessageBody('deviceId', ParseUUIDPipe) deviceId: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    // Check ownership
+    if (!client.data.userId) {
+      client.disconnect();
+      return;
+    }
+
+    const userId = client.data.userId;
+
+    const isDeviceOwnedByUser = await this.devicesService.isOwnedBy(
+      deviceId,
+      userId,
+    );
+
+    if (!isDeviceOwnedByUser) {
+      client.emit('joinDeviceError', {
+        deviceId,
+        message: 'Device not authorized',
+      });
+      return;
+    }
+
+    // If user owns said device, join client to device:id room
+    try {
+      await client.join(`device:${deviceId}`);
+      client.emit('joinDeviceSuccess', { deviceId });
+    } catch {
+      client.emit('joinDeviceError', {
+        deviceId,
+        message: 'Failed to join device room',
+      });
     }
   }
 }
