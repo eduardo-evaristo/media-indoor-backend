@@ -180,10 +180,23 @@ export default class VisualizerGateway implements OnGatewayConnection {
     //   .to(`device:${deviceId}`)
     //   .emit('controlDevice', { action: controlDeviceDto.action });
     try {
-      await client
+      const responses = (await client
         .to(`device:${deviceId}`)
         .timeout(5000)
-        .emitWithAck('controlDevice', { action: controlDeviceDto.action });
+        .emitWithAck('controlDevice', { action: controlDeviceDto.action })) as {
+        status: 'ok' | 'error';
+      }[];
+
+      //  This is valid for the business logic I have right now
+      const response = responses[0];
+      if (!response.status || response.status === 'error') {
+        client.emit('controlDeviceError', {
+          deviceId,
+          message: 'Device could not execute action',
+        });
+        return;
+      }
+
       client.emit('controlDeviceSuccess', {
         deviceId,
         action: controlDeviceDto.action,
@@ -191,7 +204,7 @@ export default class VisualizerGateway implements OnGatewayConnection {
     } catch {
       client.emit('controlDeviceError', {
         deviceId,
-        message: 'Action could not be executed',
+        message: 'Device has timed out',
       });
       return;
     }
