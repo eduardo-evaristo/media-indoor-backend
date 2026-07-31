@@ -1,4 +1,4 @@
-import { ParseUUIDPipe } from '@nestjs/common';
+import { ParseEnumPipe, ParseUUIDPipe } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -12,6 +12,15 @@ import { parseCookie } from 'cookie';
 import { Server, Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
 import { DevicesService } from 'src/devices/devices.service';
+
+enum ControlDeviceAction {
+  NEXT_MEDIA = 'nextMedia',
+}
+
+type ControlDeviceDto = {
+  deviceId: string;
+  action: ControlDeviceAction;
+};
 
 @WebSocketGateway({
   namespace: 'visualizer',
@@ -127,6 +136,64 @@ export default class VisualizerGateway implements OnGatewayConnection {
         deviceId,
         message: 'Failed to join device room',
       });
+    }
+  }
+
+  @SubscribeMessage('controlDevice')
+  async controlDevice(
+    @MessageBody() controlDeviceDto: ControlDeviceDto,
+    @ConnectedSocket() client: Socket,
+  ) {
+    if (!client.data.userId) {
+      client.disconnect();
+      return;
+    }
+
+    // Check ownership (optional)
+    const deviceId = controlDeviceDto.deviceId;
+    const userId = client.data.userId;
+
+    const isDeviceOwnedByUser = await this.devicesService.isOwnedBy(
+      deviceId,
+      userId,
+    );
+
+    if (!isDeviceOwnedByUser) {
+      client.emit('controlDeviceError', {
+        deviceId,
+        message: 'Device not authorized',
+      });
+      return;
+    }
+
+    // Check if action is valid
+    if (!Object.values(ControlDeviceAction).includes(controlDeviceDto.action)) {
+      client.emit('controlDeviceError', {
+        deviceId,
+        message: 'Action is invalid',
+      });
+      return;
+    }
+
+    // Emit action
+    // client
+    //   .to(`device:${deviceId}`)
+    //   .emit('controlDevice', { action: controlDeviceDto.action });
+    try {
+      await client
+        .to(`device:${deviceId}`)
+        .timeout(5000)
+        .emitWithAck('controlDevice', { action: controlDeviceDto.action });
+      client.emit('controlDeviceSuccess', {
+        deviceId,
+        action: controlDeviceDto.action,
+      });
+    } catch {
+      client.emit('controlDeviceError', {
+        deviceId,
+        message: 'Action could not be executed',
+      });
+      return;
     }
   }
 }
