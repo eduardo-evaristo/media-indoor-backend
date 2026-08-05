@@ -139,6 +139,37 @@ export default class VisualizerGateway implements OnGatewayConnection {
         deviceId,
         message: 'Failed to join device room',
       });
+      return;
+    }
+
+    try {
+      const socketsInRoom = await this.server
+        .in(`device:${deviceId}`)
+        .fetchSockets();
+      const deviceSocket = socketsInRoom.find(
+        (socket) => socket.data.deviceId === deviceId,
+      );
+
+      if (!deviceSocket) {
+        client.emit('deviceStateUpdateError', {
+          deviceId,
+          message: 'Device is offline',
+        });
+        return;
+      }
+
+      const responses = await client
+        .to(deviceSocket?.id)
+        .timeout(5000)
+        .emitWithAck('getCurrentState', {});
+      const response = responses[0];
+
+      client.emit('deviceStateUpdate', { deviceId, state: response });
+    } catch {
+      client.emit('deviceStateUpdateError', {
+        deviceId,
+        message: 'Timeout while attempting to get device state',
+      });
     }
   }
 
