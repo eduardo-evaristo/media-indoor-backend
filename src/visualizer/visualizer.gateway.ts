@@ -15,6 +15,9 @@ import { DevicesService } from 'src/devices/devices.service';
 
 enum ControlDeviceAction {
   NEXT_MEDIA = 'nextMedia',
+  PREVIOUS_MEDIA = 'previousMedia',
+  PAUSE = 'pause',
+  PLAY = 'play',
 }
 
 type ControlDeviceDto = {
@@ -179,9 +182,25 @@ export default class VisualizerGateway implements OnGatewayConnection {
     // client
     //   .to(`device:${deviceId}`)
     //   .emit('controlDevice', { action: controlDeviceDto.action });
+
+    const socketsInServer = await this.server
+      .in(`device:${deviceId}`)
+      .fetchSockets();
+    const deviceSocket = socketsInServer.find(
+      (socket) => socket.data.deviceId === deviceId,
+    );
+
+    if (!deviceSocket) {
+      client.emit('controlDeviceError', {
+        deviceId,
+        message: 'Device is offline',
+      });
+      return;
+    }
+
     try {
       const responses = (await client
-        .to(`device:${deviceId}`)
+        .to(deviceSocket?.id)
         .timeout(5000)
         .emitWithAck('controlDevice', { action: controlDeviceDto.action })) as {
         status: 'ok' | 'error';
