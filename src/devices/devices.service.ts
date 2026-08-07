@@ -130,7 +130,11 @@ export class DevicesService {
         playlist: {
           include: {
             medias: {
-              include: { media: { select: { path: true, id: true } } },
+              include: {
+                media: {
+                  select: { path: true, id: true, name: true, mimeType: true },
+                },
+              },
             },
           },
         },
