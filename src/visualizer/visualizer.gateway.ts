@@ -235,6 +235,8 @@ export default class VisualizerGateway implements OnGatewayConnection {
         .timeout(5000)
         .emitWithAck('controlDevice', { action: controlDeviceDto.action })) as {
         status: 'ok' | 'error';
+        currentMedia?: { id: string; path: string };
+        upcomingMedia?: { id: string; path: string }[];
       }[];
 
       //  This is valid for the business logic I have right now
@@ -250,6 +252,12 @@ export default class VisualizerGateway implements OnGatewayConnection {
       client.emit('controlDeviceSuccess', {
         deviceId,
         action: controlDeviceDto.action,
+      });
+
+      client.emit('deviceStateUpdate', {
+        deviceId,
+        currentMedia: response.currentMedia,
+        upcomingMedia: response.upcomingMedia,
       });
     } catch {
       client.emit('controlDeviceError', {
